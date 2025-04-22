@@ -1,31 +1,42 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from "react";
 
-type CodeData = {
+type CodeItem = {
   code: string;
   description: string;
   images: string[];
 };
 
-interface CodeContextType {
-  codes: Record<string, CodeData>;
-  addCode: (code: string, description: string, images: string[]) => void;
-  getCode: (code: string) => CodeData | null;
-}
+type CodeContextType = {
+  codes: CodeItem[];
+  addCode: (code: CodeItem) => void;
+  getCode: (code: string) => CodeItem | undefined;
+};
 
 const CodeContext = createContext<CodeContextType | undefined>(undefined);
 
-export const CodeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [codes, setCodes] = useState<Record<string, CodeData>>({});
+export const useCodeContext = () => {
+  const context = useContext(CodeContext);
+  if (context === undefined) {
+    throw new Error("useCodeContext must be used within a CodeProvider");
+  }
+  return context;
+};
 
-  const addCode = (code: string, description: string, images: string[]) => {
-    setCodes(prev => ({
-      ...prev,
-      [code]: { code, description, images }
-    }));
+export const CodeProvider = ({ children }: { children: ReactNode }) => {
+  const [codes, setCodes] = useState<CodeItem[]>([
+    {
+      code: "matrix",
+      description: "Матрица (англ. The Matrix) — американский научно-фантастический боевик 1999 года. В фильме представлен мир, в котором реальность, существующая для большинства людей, является на самом деле симуляцией типа «мозг в колбе», созданной разумными машинами.",
+      images: ["/placeholder.svg", "/placeholder.svg"]
+    }
+  ]);
+
+  const addCode = (newCode: CodeItem) => {
+    setCodes((prevCodes) => [...prevCodes, newCode]);
   };
 
-  const getCode = (code: string) => {
-    return codes[code] || null;
+  const getCode = (searchCode: string) => {
+    return codes.find((item) => item.code.toLowerCase() === searchCode.toLowerCase());
   };
 
   return (
@@ -33,12 +44,4 @@ export const CodeProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       {children}
     </CodeContext.Provider>
   );
-};
-
-export const useCodeContext = () => {
-  const context = useContext(CodeContext);
-  if (context === undefined) {
-    throw new Error('useCodeContext must be used within a CodeProvider');
-  }
-  return context;
 };
